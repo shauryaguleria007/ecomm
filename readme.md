@@ -1,5 +1,2 @@
-<<<<<<< HEAD
 master
-=======
 frontend
->>>>>>> frontend
