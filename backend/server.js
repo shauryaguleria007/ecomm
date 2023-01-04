@@ -4,12 +4,22 @@ const dotenv = require('dotenv')
 
 dotenv.config({ path: 'config/config.env' })
 
-const startServer = async () => {
-  await connectDatabase()
-
-  app.listen(process.env.PORT, () => {
-    console.log('app is running at ' + process.env.PORT)
+process.on('uncaughtException', (err) => {
+  console.log(`Error :${err.message}`)
+  console.log('Shutting down the server ')
+  Server.close(() => {
+    process.exit(1)
   })
-}
+})
+const Server = app.listen(process.env.PORT, () => {
+  console.log('app is running at ' + process.env.PORT)
+})
 
-startServer()
+process.on('unhandledRejection', (err) => {
+  console.log(`Error :${err.message}`)
+  console.log('Shutting down the server ')
+  Server.close(() => {
+    process.exit(1)
+  })
+})
+connectDatabase()
