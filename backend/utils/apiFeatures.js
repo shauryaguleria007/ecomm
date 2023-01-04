@@ -17,7 +17,12 @@ class ApiFeatures {
     return this
   }
   filter() {
-    const queryCopy = { ...this.queryValue }
+    let queryCopy = {
+      ...this.queryValue,
+    }
+    if (queryCopy.category)
+      queryCopy = { ...queryCopy, category: { $in: this.queryValue.category } }
+    console.log(queryCopy)
     const removeFields = ['search', 'page', 'limit']
     removeFields.forEach((key) => delete queryCopy[key])
     let queryStr = JSON.stringify(queryCopy)
