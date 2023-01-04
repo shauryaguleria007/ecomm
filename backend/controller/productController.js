@@ -4,11 +4,16 @@ const { AsyncError } = require('../middleware')
 
 //all
 const getAllProducts = AsyncError(async (req, res, next) => {
+  const resultPerPage = process.env.PAGE
+  const productCount = await Product.countDocuments()
   const apiFeature = new ApiFeatures(Product.find(), req.query)
     .searchValue()
     .filter()
+    .paginate(resultPerPage)
   const products = await apiFeature.query
-  res.status(200).json({ message: true, products })
+  res
+    .status(200)
+    .json({ message: true, products, count: products.length, productCount })
 })
 
 const getProductDetails = AsyncError(async (req, res, next) => {
