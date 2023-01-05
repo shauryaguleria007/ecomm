@@ -29,6 +29,7 @@ const getProductDetails = AsyncError(async (req, res, next) => {
 
 //admin
 const createProduct = AsyncError(async (req, res, next) => {
+  req.body.user = req.user.id
   await Product.create(req.body)
   res.status(200).json({ message: 'product created' })
 })
