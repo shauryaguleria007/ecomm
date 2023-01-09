@@ -24,13 +24,14 @@ const loginUser = AsyncError(async (req, res, next) => {
   const { email, password } = req.body
   if (!email || !password)
     return next(new ErrorHandler('email and password required ', 400))
-  const user = await User.findOne({ email })
+  const user = await User.findOne({ email }).select('+password')
   if (!user) return next(new ErrorHandler('please register '), 400)
   const isPasswordMatched = await user.comparePassword(password)
   if (!isPasswordMatched)
     return next(new ErrorHandler('incorrect password', 401))
+  const user2 = await User.findOne({ email })
 
-  sendToken(user, 200, res)
+  sendToken(user2, 200, res)
 })
 
 const logoutUser = AsyncError(async (req, res, next) => {
@@ -102,10 +103,102 @@ const resetPasswordMail = AsyncError(async (req, res, next) => {
 
   sendToken(user, 200, res)
 })
+
+const getUserDetails = AsyncError(async (req, res, next) => {
+  const user = await User.findById(req.user._id).select(['+password'])
+  res.status(200).json({ success: true, user })
+})
+
+const updatePassword = AsyncError(async (req, res, next) => {
+  let user = await User.findById(req.user.id).select('+password')
+  const passwordMatch = await user.comparePassword(req.body.password)
+  console.log(passwordMatch)
+  if (!passwordMatch)
+    return next(new ErrorHandler('please enter correct password', 400))
+  if (req.body.newPassword !== req.body.confirmNewPassword)
+    return next(
+      new ErrorHandler('new password is not same as confirmed password ', 400)
+    )
+  user.password = req.body.newPassword
+  user = await User.findById(req.user.id)
+  await user.save()
+
+  sendToken(user, 200, res)
+})
+
+const updateProfile = AsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+  }
+  const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+    new: true,
+    runValidators: true,
+    useFindAndModify: false,
+  })
+
+  res.json({
+    success: true,
+  })
+})
+
+const getAllUsers = AsyncError(async (req, res, next) => {
+  const users = await User.find({ role: { $ne: 'admin' } })
+  res.send({ success: true, users })
+})
+
+const getSingleUser = AsyncError(async (req, res, next) => {
+  const user = await User.findById({
+    _id: req.params.id,
+    role: { $ne: 'admin' },
+  })
+  if (!user) return next(new ErrorHandler('user not found'))
+  res.send({ success: true, user })
+})
+
+const deleteUser = AsyncError(async (req, res, next) => {
+  const user = await User.findByIdAndRemove({
+    _id: req.params.id,
+    role: { $ne: 'admin' },
+  })
+  if (!user) return next(new ErrorHandler('user not found'))
+  await user.remove()
+  res.send({ success: true })
+})
+
+const updateUser = AsyncError(async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+    role: req.body.role,
+  }
+  const user = await User.findByIdAndUpdate(
+    {
+      _id: req.params.id,
+      role: { $ne: 'admin' },
+    },
+    newUserData,
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    }
+  )
+  if (!user) return next(new ErrorHandler('user not found'))
+  user.save()
+  res.send({ success: true })
+})
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   forgotPassword,
   resetPasswordMail,
+  getUserDetails,
+  updatePassword,
+  updateProfile,
+  getAllUsers,
+  getSingleUser,
+  deleteUser,
+  updateUser,
 }
