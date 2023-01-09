@@ -1,6 +1,8 @@
 const { User } = require('../modles')
 const { ErrorHandler, sendEmail, sendToken } = require('../utils')
 const { AsyncError } = require('../middleware')
+const crypto = require('crypto')
+const { send } = require('process')
 
 const registerUser = AsyncError(async (req, res, next) => {
   const { name, email, password } = req.body
@@ -76,9 +78,34 @@ const forgotPassword = AsyncError(async (req, res, next) => {
     return next(new ErrorHandler(error.message, 500))
   }
 })
+
+const resetPasswordMail = AsyncError(async (req, res, next) => {
+  const resetPasswordToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex')
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  })
+  if (!user)
+    return next(new ErrorHandler('time limit exeded please try again'), 400)
+
+  if (req.body.password !== req.body.confirmPassword) {
+    return next(new ErrorHandler('password doesnot match'), 400)
+  }
+
+  user.password = req.body.password
+  user.resetPasswordExpire = undefined
+  user.resetPasswordToken = undefined
+  await user.save()
+
+  sendToken(user, 200, res)
+})
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   forgotPassword,
+  resetPasswordMail,
 }
