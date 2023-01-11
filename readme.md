@@ -1,6 +1,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 master
+=======
+>>>>>>> frontend
 =======
 >>>>>>> frontend
 =======
