@@ -1,4 +1,4 @@
-import { Header, Footer } from './component/layout'
+import { Header, Footer } from './component'
 import { useEffect } from 'react'
 import WebFont from 'webfontloader'
 import { Outlet } from 'react-router-dom'
