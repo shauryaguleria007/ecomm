@@ -10,7 +10,6 @@ const Product = ({ product }) => {
     value: 2.5,
     isHalf: false,
   }
-  console.log(product)
 
   return (
     <Link className='productCard' to={Product.id}>
